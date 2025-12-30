@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import toast,{Toaster} from 'react-hot-toast'
 
 export default function Home() {
   const [content, setContent] = useState('')
@@ -114,6 +115,7 @@ export default function Home() {
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(url)
+                  toast.success("Link copied successfully..")
                 }}
                 className="px-3 py-1 bg-gray-600 rounded hover:bg-gray-400 transition"
               >
@@ -124,6 +126,7 @@ export default function Home() {
 
         )}
       </div>
+      <Toaster />
     </div>
   )
 }
