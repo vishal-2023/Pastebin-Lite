@@ -1,65 +1,129 @@
-import Image from "next/image";
+'use client'
+import { useState } from 'react'
 
 export default function Home() {
+  const [content, setContent] = useState('')
+  const [ttl, setTtl] = useState('')
+  const [views, setViews] = useState('')
+  const [url, setUrl] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  async function submit() {
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/pastes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content,
+          ttl_seconds: ttl ? Number(ttl) : undefined,
+          max_views: views ? Number(views) : undefined
+        })
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || 'Something went wrong')
+        setUrl('')
+      } else {
+        setUrl(data.url)
+        setContent('')
+        setTtl('')
+        setViews('')
+      }
+    } catch (err) {
+      setError('Network error')
+      setUrl('')
+    }
+    setLoading(false)
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="min-h-screen bg-gray-500 flex items-center justify-center p-6">
+      <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-2xl">
+        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
+          Create a New Paste
+        </h1>
+
+        <label className="block mb-2 text-gray-700 font-medium">
+          Paste Content
+        </label>
+        <textarea
+          className="w-full border text-gray-700 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none mb-4"
+          rows="6"
+          value={content}
+          onChange={e => setContent(e.target.value)}
+          placeholder="Enter your text here..."
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block mb-2 text-gray-700 font-medium">
+              TTL (seconds, optional)
+            </label>
+            <input
+              type="number"
+              className="w-full text-black border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              value={ttl}
+              onChange={e => setTtl(e.target.value)}
+              placeholder="e.g. 60"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          </div>
+          <div>
+            <label className="block mb-2 text-gray-700 font-medium">
+              Max Views (optional)
+            </label>
+            <input
+              type="number"
+              className="w-full border text-black border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              value={views}
+              onChange={e => setViews(e.target.value)}
+              placeholder="e.g. 5"
+            />
+          </div>
         </div>
-      </main>
+
+        {error && (
+          <p className="text-red-500 mb-4 text-center font-medium">{error}</p>
+        )}
+
+        <button
+          className={`w-full py-3 px-6 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600'
+            }`}
+          onClick={submit}
+          disabled={loading}
+        >
+          {loading ? 'Creating...' : 'Create Paste'}
+        </button>
+
+        {url && (
+          <div className="mt-6 text-center">
+            <p className="text-gray-700 mb-2">Your paste is ready:</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+              <a
+                href={url}
+                className="text-blue-600 hover:underline break-all"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {url}
+              </a>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(url)
+                }}
+                className="px-3 py-1 bg-gray-600 rounded hover:bg-gray-400 transition"
+              >
+                Copy
+              </button>
+            </div>
+          </div>
+
+        )}
+      </div>
     </div>
-  );
+  )
 }
